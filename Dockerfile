@@ -20,4 +20,4 @@ RUN composer install --optimize-autoloader --no-interaction
 
 EXPOSE 80
 
-CMD ["frankenphp", "php-server", "-r", "public/", "--listen", "0.0.0.0:80"]
+CMD sh -c "php artisan migrate --force && frankenphp php-server -r public/ --listen 0.0.0.0:80"
