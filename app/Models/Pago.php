@@ -10,7 +10,7 @@ class Pago extends Model
 
     public const ESTADOS = ['pendiente', 'aprobado', 'rechazado'];
 
-    protected $fillable = ['pedido_id', 'estado', 'metodo', 'referencia_externa', 'monto', 'pagado_en'];
+    protected $fillable = ['pedido_id', 'estado', 'metodo', 'proveedor_pago', 'referencia_externa', 'proveedor_payment_id', 'proveedor_preference_id', 'checkout_url', 'monto', 'pagado_en'];
 
     protected function casts(): array
     {

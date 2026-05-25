@@ -13,6 +13,8 @@ use App\Http\Controllers\CarritoController;
 use App\Http\Controllers\CatalogoController;
 use App\Http\Controllers\Cliente\DireccionController as ClienteDireccionController;
 use App\Http\Controllers\Cliente\PerfilController as ClientePerfilController;
+use App\Http\Controllers\FacturaController;
+use App\Http\Controllers\MercadoPagoController;
 use App\Http\Controllers\PedidoController;
 use App\Http\Controllers\Proveedor\DashboardController as ProveedorDashboardController;
 use App\Http\Controllers\Proveedor\PerfilController as ProveedorPerfilController;
@@ -32,6 +34,8 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
+Route::get('/pagos/mercado-pago/retorno', [MercadoPagoController::class, 'retorno'])->name('mercado-pago.retorno');
+Route::post('/webhooks/mercado-pago', [MercadoPagoController::class, 'webhook'])->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])->name('mercado-pago.webhook');
 
 Route::middleware(['auth', 'role:cliente'])->group(function () {
     Route::get('/carrito', [CarritoController::class, 'index'])->name('carrito.index');
@@ -42,6 +46,7 @@ Route::middleware(['auth', 'role:cliente'])->group(function () {
     Route::get('/pedidos/crear', [PedidoController::class, 'create'])->name('pedidos.create');
     Route::post('/pedidos', [PedidoController::class, 'store'])->name('pedidos.store');
     Route::post('/pedidos/{pedido}/pagar', [PedidoController::class, 'pagar'])->name('pedidos.pagar');
+    Route::post('/pedidos/{pedido}/mercado-pago', [MercadoPagoController::class, 'iniciar'])->name('pedidos.mercado-pago');
     Route::get('/cliente/perfil', [ClientePerfilController::class, 'show'])->name('cliente.perfil');
     Route::put('/cliente/perfil', [ClientePerfilController::class, 'update'])->name('cliente.perfil.update');
     Route::get('/cliente/direcciones', [ClienteDireccionController::class, 'index'])->name('cliente.direcciones.index');
@@ -52,6 +57,8 @@ Route::middleware(['auth', 'role:cliente'])->group(function () {
 Route::middleware(['auth', 'role:cliente,administrador,personal_logistico'])->group(function () {
     Route::get('/pedidos/{pedido}', [PedidoController::class, 'show'])->name('pedidos.show');
     Route::get('/pedidos/{pedido}/tracking', [PedidoController::class, 'tracking'])->name('pedidos.tracking');
+    Route::get('/facturas', [FacturaController::class, 'index'])->name('facturas.index');
+    Route::get('/facturas/{factura}', [FacturaController::class, 'show'])->name('facturas.show');
 });
 
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:administrador,personal_logistico'])->group(function () {
@@ -59,7 +66,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:administrador,
     Route::get('/pedidos', [PedidoAdminController::class, 'index'])->name('pedidos.index');
     Route::patch('/pedidos/{pedido}/estado', [PedidoAdminController::class, 'updateEstado'])->name('pedidos.estado');
     Route::patch('/pedidos/{pedido}/drone', [PedidoAdminController::class, 'asignarDrone'])->name('pedidos.drone');
+    Route::post('/pedidos/{pedido}/simular-vuelo', [PedidoAdminController::class, 'simularVuelo'])->name('pedidos.simular-vuelo');
     Route::post('/entregas/{entrega}/tracking', [PedidoAdminController::class, 'registrarTracking'])->name('entregas.tracking');
+    Route::post('/entregas/{entrega}/finalizar', [PedidoAdminController::class, 'finalizarEntrega'])->name('entregas.finalizar');
 
     Route::resource('drones', DroneController::class)->except(['show']);
     Route::resource('estaciones', EstacionEntregaController::class)->parameters(['estaciones' => 'estacion'])->except(['show']);

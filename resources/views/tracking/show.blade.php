@@ -15,6 +15,7 @@
     $currentIndex = array_search($estadoActual, $keys, true);
     $currentIndex = $currentIndex === false ? 0 : $currentIndex;
     $points = $pedido->entrega?->trackingPoints ?? collect();
+    $entregaFinalizada = $pedido->entrega?->estado === 'finalizada' || $pedido->estado === 'entregado';
     $mapPoints = $points->map(fn ($point) => [
         'lat' => (float) $point->latitud,
         'lng' => (float) $point->longitud,
@@ -28,11 +29,17 @@
             ['lat' => 7.1232000, 'lng' => -73.1208000, 'alt' => 968, 'time' => 'Drone en vuelo Bucaramanga'],
         ]);
     }
-    $destinationPoint = [
-        'lat' => (float) ($pedido->destino_latitud ?? 7.1253930),
-        'lng' => (float) ($pedido->destino_longitud ?? -73.1198040),
-        'label' => $pedido->tipo_entrega === 'domicilio' ? 'Destino domicilio' : 'Destino estacion',
-    ];
+    $destinationPoint = $pedido->tipo_entrega === 'domicilio'
+        ? [
+            'lat' => (float) ($pedido->destino_latitud ?? $pedido->direccionCliente?->latitud ?? 7.1253930),
+            'lng' => (float) ($pedido->destino_longitud ?? $pedido->direccionCliente?->longitud ?? -73.1198040),
+            'label' => $pedido->direccion_entrega ?? $pedido->direccionCliente?->direccion ?? 'Destino domicilio',
+        ]
+        : [
+            'lat' => (float) ($pedido->estacionEntrega?->latitud ?? 7.1253930),
+            'lng' => (float) ($pedido->estacionEntrega?->longitud ?? -73.1198040),
+            'label' => $pedido->estacionEntrega?->nombre ?? 'Destino estacion',
+        ];
 @endphp
 
 @push('scripts')
@@ -108,12 +115,36 @@
             });
 
         const lastPoint = points[points.length - 1];
-        L.marker([lastPoint.lat, lastPoint.lng], { icon: droneIcon })
+        const droneMarker = L.marker([lastPoint.lat, lastPoint.lng], { icon: droneIcon })
             .addTo(map)
             .bindPopup('Drone {{ $pedido->entrega?->drone?->codigo ?? 'sin asignar' }}<br>Estado: {{ str_replace('_', ' ', $pedido->estado) }}<br>Ultimo punto GPS')
             .openPopup();
 
         map.fitBounds(route.getBounds(), { padding: [38, 38] });
+
+        const playButton = document.getElementById('play-flight');
+        if (playButton && routeCoords.length > 1) {
+            playButton.addEventListener('click', function () {
+                let index = 0;
+                this.disabled = true;
+                this.textContent = 'Reproduciendo vuelo...';
+                droneMarker.setLatLng(routeCoords[0]);
+
+                const timer = setInterval(() => {
+                    index++;
+                    if (index >= routeCoords.length) {
+                        clearInterval(timer);
+                        this.disabled = false;
+                        this.textContent = 'Reproducir vuelo';
+                        droneMarker.openPopup();
+                        return;
+                    }
+
+                    droneMarker.setLatLng(routeCoords[index]);
+                    map.panTo(routeCoords[index], { animate: true, duration: .35 });
+                }, 700);
+            });
+        }
     });
 </script>
 @endpush
@@ -272,11 +303,17 @@
         <div class="surface p-2">
             <div id="tracking-map-real"></div>
             <div class="map-overlay">
-                <div class="d-flex flex-wrap justify-content-between gap-2">
-                    <span><strong>Drone:</strong> {{ $pedido->entrega?->drone?->codigo ?? 'Sin asignar' }}</span>
-                    <span><strong>Entrega:</strong> {{ $pedido->entrega?->estado ?? 'sin entrega' }}</span>
-                    <span><strong>Tipo:</strong> {{ $pedido->tipo_entrega }}</span>
-                    <span><strong>Puntos GPS:</strong> {{ $points->count() }}</span>
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <div class="d-flex flex-wrap gap-3">
+                        <span><strong>Drone:</strong> {{ $pedido->entrega?->drone?->codigo ?? 'Sin asignar' }}</span>
+                        <span><strong>Bateria:</strong> {{ $pedido->entrega?->drone?->bateria ?? '-' }}%</span>
+                        <span><strong>Entrega:</strong> {{ $pedido->entrega?->estado ?? 'sin entrega' }}</span>
+                        <span><strong>Tipo:</strong> {{ $pedido->tipo_entrega }}</span>
+                        <span><strong>Puntos GPS:</strong> {{ $points->count() }}</span>
+                    </div>
+                    <button id="play-flight" class="btn btn-primary btn-sm" type="button" @disabled($mapPoints->count() < 2)>
+                        Reproducir vuelo
+                    </button>
                 </div>
             </div>
         </div>
@@ -314,17 +351,42 @@
     </div>
     @if(auth()->user()?->hasRole('administrador', 'personal_logistico') && $pedido->entrega)
         <div class="col-lg-4">
-            <form class="surface p-3" method="POST" action="{{ route('admin.entregas.tracking', $pedido->entrega) }}">
-                @csrf
-                <h2 class="h5">Registrar punto GPS</h2>
-                <label class="form-label">Latitud</label>
-                <input class="form-control mb-2" type="number" step="0.0000001" name="latitud" value="7.1193490" required>
-                <label class="form-label">Longitud</label>
-                <input class="form-control mb-2" type="number" step="0.0000001" name="longitud" value="-73.1227410" required>
-                <label class="form-label">Altitud m</label>
-                <input class="form-control mb-3" type="number" step="0.01" name="altitud_m" value="972">
-                <button class="btn btn-primary w-100">Guardar GPS</button>
-            </form>
+            @if(!$entregaFinalizada)
+                <div class="surface p-3 mb-3">
+                    <h2 class="h5">Simulacion operativa</h2>
+                    <p class="text-muted small">Genera puntos GPS, altitud y consumo realista de bateria segun distancia y peso.</p>
+                    <form method="POST" action="{{ route('admin.pedidos.simular-vuelo', $pedido) }}" class="mb-2">
+                        @csrf
+                        <button class="btn btn-primary w-100">
+                            <span class="material-symbols-outlined">flight_takeoff</span>
+                            Simular vuelo
+                        </button>
+                    </form>
+                    <form method="POST" action="{{ route('admin.entregas.finalizar', $pedido->entrega) }}">
+                        @csrf
+                        <button class="btn btn-outline-success w-100">
+                            <span class="material-symbols-outlined">home_pin</span>
+                            Finalizar y volver a base
+                        </button>
+                    </form>
+                </div>
+                <form class="surface p-3" method="POST" action="{{ route('admin.entregas.tracking', $pedido->entrega) }}">
+                    @csrf
+                    <h2 class="h5">Registrar punto GPS</h2>
+                    <label class="form-label">Latitud</label>
+                    <input class="form-control mb-2" type="number" step="0.0000001" name="latitud" value="7.1193490" required>
+                    <label class="form-label">Longitud</label>
+                    <input class="form-control mb-2" type="number" step="0.0000001" name="longitud" value="-73.1227410" required>
+                    <label class="form-label">Altitud m</label>
+                    <input class="form-control mb-3" type="number" step="0.01" name="altitud_m" value="972">
+                    <button class="btn btn-primary w-100">Guardar GPS</button>
+                </form>
+            @else
+                <div class="surface p-3 mb-3">
+                    <h2 class="h5">Entrega finalizada</h2>
+                    <p class="text-muted mb-0">Este pedido ya fue entregado. Ya no se pueden simular nuevos vuelos ni registrar GPS; solo puedes reproducir el recorrido en el mapa.</p>
+                </div>
+            @endif
         </div>
     @endif
 </div>

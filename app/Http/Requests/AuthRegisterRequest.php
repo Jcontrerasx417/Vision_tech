@@ -17,6 +17,7 @@ class AuthRegisterRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'telefono' => ['nullable', 'string', 'max:50', 'regex:/^[0-9+()\\s-]{7,50}$/'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'role' => ['nullable', Rule::in(['cliente', 'administrador', 'personal_logistico', 'proveedor'])],
             'nombre_tienda' => ['nullable', 'required_if:role,proveedor', 'string', 'max:255'],

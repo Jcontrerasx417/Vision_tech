@@ -14,6 +14,9 @@
                 <label class="form-label">Correo</label>
                 <input class="form-control mb-3" type="email" name="email" value="{{ old('email') }}" required>
 
+                <label class="form-label">Telefono</label>
+                <input class="form-control mb-3" name="telefono" value="{{ old('telefono') }}" placeholder="Ej: 3001234567">
+
                 <label class="form-label">Rol</label>
                 <select class="form-select mb-3" name="role">
                     <option value="cliente">Cliente</option>

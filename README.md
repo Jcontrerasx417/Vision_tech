@@ -1,58 +1,482 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# VisionTech 🚁
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Plataforma Ecommerce con Simulación Inteligente de Entregas por Drones
 
-## About Laravel
+VisionTech es una plataforma web desarrollada con Laravel orientada al comercio electrónico y la logística inteligente mediante drones. El sistema permite a los usuarios realizar compras en línea, gestionar pedidos, realizar pagos, visualizar tracking GPS y simular entregas automatizadas utilizando drones y estaciones de entrega.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+El proyecto fue desarrollado con fines académicos, integrando conceptos de ecommerce, geolocalización, simulación logística, roles multiusuario y pasarelas de pago.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+# 📌 Vista General
 
-## Learning Laravel
+VisionTech busca simular un ecosistema moderno de entregas automatizadas donde:
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- Los clientes realizan pedidos desde una tienda online.
+- El sistema valida el peso y disponibilidad logística.
+- El pago debe aprobarse antes de asignar un dron.
+- Un dron simulado realiza el envío mostrando tracking GPS en tiempo real.
+- El usuario puede recibir el pedido en estación o domicilio.
+- Los administradores controlan drones, estaciones, mantenimientos y logística.
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+# ✨ Funcionalidades Principales
 
-## Agentic Development
+## Ecommerce
+- Registro e inicio de sesión.
+- Gestión de roles y permisos.
+- Catálogo de productos.
+- Carrito de compras.
+- Gestión de stock.
+- Gestión de proveedores.
+- Gestión de pedidos.
+- Facturación automática.
+- Historial de compras.
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Logística Inteligente
+- Simulación de drones.
+- Tracking GPS en tiempo real.
+- Visualización de rutas en mapa.
+- Control de batería y mantenimiento.
+- Asignación automática de drones.
+- Simulación de retorno a base.
+- Estaciones de entrega.
 
-```bash
-composer require laravel/boost --dev
+## Pagos
+- Integración preparada con Mercado Pago Checkout Pro.
+- Pago simulado para entorno demo/académico.
+- Validación de estados de pago.
+- Restricción de envío hasta aprobación del pago.
 
-php artisan boost:install
+## Administración
+- Panel administrativo completo.
+- Gestión de productos y categorías.
+- Gestión de proveedores.
+- Gestión de drones y estaciones.
+- Gestión de mantenimientos.
+- Gestión de solicitudes y logística.
+
+---
+
+# 👥 Roles del Sistema
+
+## Cliente
+- Comprar productos.
+- Guardar direcciones.
+- Crear pedidos.
+- Consultar facturas.
+- Visualizar tracking GPS.
+- Elegir método de entrega.
+
+## Administrador
+- Gestionar productos.
+- Gestionar pedidos.
+- Gestionar drones y estaciones.
+- Supervisar logística.
+- Gestionar mantenimientos.
+- Validar operaciones del sistema.
+
+## Personal Logístico
+- Supervisar entregas.
+- Monitorear drones.
+- Gestionar incidencias.
+- Coordinar entregas domiciliarias.
+
+## Proveedor
+- Gestionar productos propios.
+- Consultar pedidos relacionados.
+- Actualizar stock.
+
+---
+
+# 🛒 Flujo Principal del Pedido
+
+```text
+Cliente selecciona productos
+        ↓
+Agrega productos al carrito
+        ↓
+Selecciona dirección o estación
+        ↓
+Confirma pedido
+        ↓
+Realiza el pago
+        ↓
+Pago aprobado
+        ↓
+Sistema genera factura
+        ↓
+Se asigna dron disponible
+        ↓
+Inicia simulación de vuelo
+        ↓
+Cliente visualiza tracking GPS
+        ↓
+Entrega completada
+        ↓
+Dron retorna a base
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+---
 
-## Contributing
+# 💳 Flujo de Pago y Regla del Dron
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Regla de negocio principal
 
-## Code of Conduct
+> Un dron NO puede ser asignado ni iniciar una entrega hasta que el pago del pedido haya sido aprobado.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Flujo
 
-## Security Vulnerabilities
+```text
+Pedido creado
+        ↓
+Pago pendiente
+        ↓
+Esperar confirmación
+        ↓
+Pago aprobado
+        ↓
+Generar factura
+        ↓
+Asignar dron
+        ↓
+Iniciar envío
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Estados posibles del pago
+- pending
+- approved
+- rejected
+- cancelled
 
-## License
+### Estados posibles del pedido
+- en preparación
+- pendiente de pago
+- pagado
+- enviado
+- entregado
+- cancelado
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+---
+
+# 🛰️ Simulación de Drones y Tracking
+
+VisionTech incorpora un sistema de simulación logística basado en drones.
+
+## Características de simulación
+- Generación dinámica de coordenadas GPS.
+- Movimiento en tiempo real sobre mapa.
+- Simulación de altitud.
+- Consumo de batería.
+- Estado operativo del dron.
+- Retorno automático a base.
+- Envío a mantenimiento por batería baja.
+
+## Tecnologías utilizadas
+- Leaflet.js
+- OpenStreetMap
+- APIs de geolocalización
+- Simulación backend con Laravel
+
+## Tracking GPS
+El usuario puede:
+- Ver la ubicación del pedido.
+- Consultar el estado del dron.
+- Observar el recorrido en mapa.
+- Recibir notificaciones del estado del envío.
+
+---
+
+# 🛠️ Stack Tecnológico
+
+| Tecnología | Uso |
+|---|---|
+| Laravel | Framework principal |
+| PHP | Backend |
+| Blade | Vistas |
+| Bootstrap | Interfaz |
+| SQLite | Base de datos |
+| Leaflet | Mapas |
+| OpenStreetMap | Geolocalización |
+| Mercado Pago | Pasarela de pago |
+| PHPUnit | Testing |
+
+---
+
+# ⚙️ Instalación del Proyecto
+
+## 1. Clonar el repositorio
+
+```bash
+git clone https://github.com/usuario/visiontech.git
+cd visiontech
+```
+
+---
+
+## 2. Instalar dependencias
+
+```bash
+composer install
+```
+
+---
+
+## 3. Copiar archivo de entorno
+
+```bash
+cp .env.example .env
+```
+
+---
+
+## 4. Generar clave de aplicación
+
+```bash
+php artisan key:generate
+```
+
+---
+
+## 5. Configurar base de datos SQLite
+
+Crear archivo:
+
+```bash
+database/database.sqlite
+```
+
+Configurar `.env`
+
+```env
+DB_CONNECTION=sqlite
+```
+
+---
+
+## 6. Ejecutar migraciones y seeders
+
+```bash
+php artisan migrate --seed
+```
+
+---
+
+## 7. Levantar servidor
+
+```bash
+php artisan serve
+```
+
+Servidor:
+
+```text
+http://127.0.0.1:8000
+```
+
+---
+
+# 🔐 Variables de Entorno Importantes
+
+## Mercado Pago
+
+```env
+MERCADO_PAGO_ACCESS_TOKEN=
+MERCADO_PAGO_PUBLIC_KEY=
+MERCADO_PAGO_CURRENCY=COP
+MERCADO_PAGO_VERIFY_SSL=false
+```
+
+## Aplicación
+
+```env
+APP_NAME=VisionTech
+APP_ENV=local
+APP_DEBUG=true
+APP_URL=http://127.0.0.1:8000
+```
+
+---
+
+# 🧪 Cómo Probar Pagos
+
+## Opción 1 — Pago Simulado 
+
+El sistema incluye un flujo de pago simulado para:
+- pruebas académicas
+- demostraciones
+- desarrollo local
+
+Permite:
+- aprobar pagos manualmente
+- generar facturas
+- activar flujo del dron
+
+---
+
+## Opción 2 — Mercado Pago TEST
+
+Utilizar credenciales TEST oficiales de Mercado Pago:
+
+```env
+MERCADO_PAGO_ACCESS_TOKEN=TEST-XXXX
+MERCADO_PAGO_PUBLIC_KEY=TEST-XXXX
+```
+
+Luego:
+- crear usuarios de prueba
+- usar tarjetas TEST
+- validar estados del checkout
+
+Documentación oficial:
+https://www.mercadopago.com.co/developers/es
+
+---
+
+# 🧰 Comandos Útiles
+
+## Ejecutar servidor
+
+```bash
+php artisan serve
+```
+
+## Limpiar caché
+
+```bash
+php artisan optimize:clear
+```
+
+## Ejecutar migraciones
+
+```bash
+php artisan migrate
+```
+
+## Ejecutar seeders
+
+```bash
+php artisan db:seed
+```
+
+## Ejecutar pruebas
+
+```bash
+php artisan test
+```
+
+## Ver rutas
+
+```bash
+php artisan route:list
+```
+
+---
+
+# 📂 Estructura Básica del Proyecto
+
+```text
+visiontech/
+│
+├── app/
+│   ├── Models/
+│   ├── Http/
+│   ├── Services/
+│   └── Console/
+│
+├── database/
+│   ├── migrations/
+│   ├── seeders/
+│   └── factories/
+│
+├── public/
+│
+├── resources/
+│   ├── views/
+│   ├── css/
+│   └── js/
+│
+├── routes/
+│   ├── web.php
+│   ├── api.php
+│   └── console.php
+│
+├── storage/
+├── tests/
+└── .env
+```
+
+---
+
+# 📅 Plan de Desarrollo (Scrum)
+
+| Sprint | Estado | Objetivo |
+|---|---|---|
+| Sprint 1 | ✅ | Registro de usuarios y login |
+| Sprint 2 | ✅ | Catálogo de productos y carrito |
+| Sprint 3 | ✅ | Sistema de pagos |
+| Sprint 4 | ✅ | Tracking GPS y simulación de drones |
+
+---
+
+# 📚 Arquitectura General
+
+## Módulos principales
+
+- Autenticación y roles
+- Ecommerce
+- Pagos
+- Facturación
+- Tracking GPS
+- Simulación de drones
+- Gestión logística
+- Panel administrativo
+- Gestión de proveedores
+
+---
+
+# ⚠️ Notas Académicas
+
+## Importante
+
+VisionTech es un proyecto académico y de simulación.
+
+El sistema:
+- NO controla drones reales.
+- NO realiza vuelos reales.
+- NO opera logística aérea real.
+- NO reemplaza sistemas certificados de aeronáutica.
+
+Toda la funcionalidad de drones corresponde a:
+- simulaciones visuales
+- tracking conceptual
+- lógica académica de negocio
+
+---
+
+# 🚧 Estado del Proyecto
+
+## Estado actual
+- ✅ MVP funcional
+- ✅ Sistema de autenticación
+- ✅ Catálogo y carrito
+- ✅ Integración de pagos
+- ✅ Simulación GPS
+- ✅ Tracking en mapa
+- ✅ Panel administrativo
+- ✅ Gestión de proveedores
+
+---
+
+# 👨‍💻 Integrantes / Autores
+
+## Equipo VisionTech
+
+- Juan David Contreras
+- Leonardo Waked
+- David Chia
+
+
+---
+

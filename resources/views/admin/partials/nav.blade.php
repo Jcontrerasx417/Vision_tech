@@ -19,6 +19,9 @@
     <a href="{{ route('admin.drones.index') }}" class="{{ request()->routeIs('admin.drones.*') ? 'active' : '' }}">
         Drones <span>{{ auth()->user()->hasRole('administrador') ? '06' : '03' }}</span>
     </a>
+    <a href="{{ route('facturas.index') }}" class="{{ request()->routeIs('facturas.*') ? 'active' : '' }}">
+        Facturas <span>FX</span>
+    </a>
     <a href="{{ route('admin.estaciones.index') }}" class="{{ request()->routeIs('admin.estaciones.*') ? 'active' : '' }}">
         Estaciones <span>{{ auth()->user()->hasRole('administrador') ? '07' : '04' }}</span>
     </a>

@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    'mercado_pago' => [
+        'access_token' => env('MERCADO_PAGO_ACCESS_TOKEN'),
+        'public_key' => env('MERCADO_PAGO_PUBLIC_KEY'),
+        'currency' => env('MERCADO_PAGO_CURRENCY', 'COP'),
+        'verify_ssl' => env('MERCADO_PAGO_VERIFY_SSL', true),
+    ],
+
 ];

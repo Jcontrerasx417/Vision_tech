@@ -23,6 +23,7 @@ class PerfilController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email,'.$request->user()->id],
+            'telefono' => ['nullable', 'string', 'max:50', 'regex:/^[0-9+()\\s-]{7,50}$/'],
         ]);
 
         $request->user()->update($data);

@@ -29,6 +29,7 @@ class AuthController extends Controller
             $user = User::create([
                 'name' => $data['name'],
                 'email' => $data['email'],
+                'telefono' => $data['telefono'] ?? null,
                 'password' => Hash::make($data['password']),
                 'role' => $data['role'] ?? 'cliente',
             ]);
@@ -39,6 +40,7 @@ class AuthController extends Controller
                     'nombre' => $data['nombre_tienda'],
                     'contacto' => $user->name,
                     'email' => $user->email,
+                    'telefono' => $user->telefono,
                 ]);
                 $proveedor = $user->proveedor()->first();
                 ProveedorPerfil::create([

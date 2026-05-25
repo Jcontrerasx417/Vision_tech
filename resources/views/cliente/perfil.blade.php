@@ -31,6 +31,8 @@
             <input class="form-control mb-3" name="name" value="{{ old('name', $user->name) }}" required>
             <label class="form-label">Correo</label>
             <input class="form-control mb-3" type="email" name="email" value="{{ old('email', $user->email) }}" required>
+            <label class="form-label">Telefono</label>
+            <input class="form-control mb-3" name="telefono" value="{{ old('telefono', $user->telefono) }}" placeholder="Ej: 3001234567">
             <button class="btn btn-primary">Guardar cambios</button>
         </form>
     </div>

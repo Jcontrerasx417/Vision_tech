@@ -35,7 +35,8 @@
                                 <td>{{ $drone->modelo }}</td>
                                 <td>{{ $drone->capacidad_kg }} kg</td>
                                 <td>
-                                    <div class="progress" style="height: 8px;"><div class="progress-bar bg-warning" style="width: {{ $drone->bateria }}%"></div></div>
+                                    @php($batteryClass = $drone->bateria <= 20 ? 'bg-danger' : ($drone->bateria <= 45 ? 'bg-warning' : 'bg-success'))
+                                    <div class="progress" style="height: 10px;"><div class="progress-bar {{ $batteryClass }}" style="width: {{ $drone->bateria }}%"></div></div>
                                     <div class="small text-muted">{{ $drone->bateria }}%</div>
                                 </td>
                                 <td><span class="badge-status">{{ str_replace('_', ' ', $drone->estado) }}</span></td>

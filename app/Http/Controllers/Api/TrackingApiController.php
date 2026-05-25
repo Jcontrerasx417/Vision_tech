@@ -17,12 +17,15 @@ class TrackingApiController extends Controller
             'altitud_m' => ['nullable', 'numeric', 'min:0'],
         ]);
 
+        abort_unless($entrega->pedido->estaPagado(), 422, 'No se puede registrar tracking antes de que el pago este aprobado.');
+
         return $entrega->trackingPoints()->create($data + ['registrado_en' => now()]);
     }
 
     public function pedido(Request $request, Pedido $pedido)
     {
         abort_unless($pedido->user_id === $request->user()->id || $request->user()->hasRole('administrador', 'personal_logistico'), 403);
+        abort_unless($pedido->estaPagado(), 403, 'El tracking estara disponible cuando el pago sea aprobado.');
         return $pedido->load('entrega.trackingPoints')->entrega?->trackingPoints ?? [];
     }
 }
