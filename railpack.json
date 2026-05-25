@@ -1,12 +1,10 @@
 {
+  "$schema": "https://schema.railpack.com",
   "provider": "php",
+  "buildAptPackages": ["bison", "re2c"],
   "packages": {
     "php": "8.4"
   },
-  "buildAptPackages": [
-    "bison",
-    "re2c"
-  ],
   "deploy": {
     "startCommand": "php artisan serve --host=0.0.0.0 --port=$PORT"
   }
