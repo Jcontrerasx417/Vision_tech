@@ -3,6 +3,10 @@
   "packages": {
     "php": "8.4"
   },
+  "aptPackages": [
+    "bison",
+    "re2c"
+  ],
   "start": {
     "cmd": "php artisan serve --host=0.0.0.0 --port=$PORT"
   }
