@@ -18,6 +18,6 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 RUN composer install --optimize-autoloader --no-interaction
 
-EXPOSE 8000
+EXPOSE 80
 
-CMD php artisan serve --host=0.0.0.0 --port=8000
+CMD ["frankenphp", "php-server", "-r", "public/", "--listen", "0.0.0.0:80"]
