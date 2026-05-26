@@ -8,8 +8,8 @@
         <div class="admin-section-title">
             <div>
                 <span class="badge-status">{{ $proveedor->nombre }}</span>
-                <h1 class="display-6 fw-bold mt-2 mb-1">{{ $producto->exists ? 'Editar producto' : 'Publicar producto' }}</h1>
-                <p class="text-muted mb-0">Este producto aparecera en el catalogo publico de VisionTech.</p>
+                <h1 class="display-6 fw-bold mt-2 mb-1">{{ $producto->exists ? 'Editar producto' : 'Enviar producto a revision' }}</h1>
+                <p class="text-muted mb-0">Cada producto nuevo o editado debe ser aprobado por el administrador antes de aparecer en el catalogo.</p>
             </div>
             <a class="btn btn-outline-primary" href="{{ route('proveedor.productos.index') }}">Volver</a>
         </div>
@@ -65,9 +65,11 @@
                 </div>
             </div>
 
-            <div class="alert alert-success">Como tu proveedor ya fue aprobado, el producto quedara publicado en el catalogo al guardarlo.</div>
+            <div class="alert alert-warning">
+                Al guardar, el producto quedara en <strong>pendiente revision</strong>. Solo el administrador puede aprobarlo y publicarlo en el catalogo.
+            </div>
 
-            <button class="btn btn-primary">Guardar producto</button>
+            <button class="btn btn-primary">{{ $producto->exists ? 'Guardar y enviar a revision' : 'Enviar a revision' }}</button>
         </form>
     </section>
 </div>

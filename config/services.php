@@ -40,6 +40,9 @@ return [
         'public_key' => env('MERCADO_PAGO_PUBLIC_KEY'),
         'currency' => env('MERCADO_PAGO_CURRENCY', 'COP'),
         'verify_ssl' => env('MERCADO_PAGO_VERIFY_SSL', true),
+        'sandbox' => env('MERCADO_PAGO_SANDBOX', true),
+        'use_sandbox_url' => env('MERCADO_PAGO_USE_SANDBOX_URL', false),
+        'prefill_payer' => env('MERCADO_PAGO_PREFILL_PAYER', false),
     ],
 
 ];

@@ -12,13 +12,6 @@ class MercadoPagoService
     public function crearPreferencia(Pedido $pedido): array
     {
         $externalReference = $this->externalReference($pedido);
-        $payer = [
-            'name' => $pedido->user->name,
-            'email' => $pedido->user->email,
-        ];
-        if ($pedido->user->telefono) {
-            $payer['phone'] = ['number' => $pedido->user->telefono];
-        }
 
         $successUrl = route('mercado-pago.retorno', ['pedido' => $pedido->id]);
         $webhookUrl = route('mercado-pago.webhook');
@@ -33,7 +26,6 @@ class MercadoPagoService
                         'unit_price' => (float) $pedido->total,
                     ],
             ],
-            'payer' => $payer,
             'external_reference' => $externalReference,
             'back_urls' => [
                 'success' => $successUrl,
@@ -41,6 +33,10 @@ class MercadoPagoService
                 'pending' => route('mercado-pago.retorno', ['pedido' => $pedido->id]),
             ],
         ];
+
+        if (config('services.mercado_pago.prefill_payer', false)) {
+            $payload['payer'] = $this->payerPayload($pedido);
+        }
 
         if ($this->isPublicUrl($webhookUrl)) {
             $payload['notification_url'] = $webhookUrl;
@@ -57,6 +53,15 @@ class MercadoPagoService
         }
 
         return $response->json();
+    }
+
+    public function checkoutUrl(array $preference): ?string
+    {
+        if (config('services.mercado_pago.use_sandbox_url', false)) {
+            return $preference['sandbox_init_point'] ?? $preference['init_point'] ?? null;
+        }
+
+        return $preference['init_point'] ?? $preference['sandbox_init_point'] ?? null;
     }
 
     public function obtenerPago(string $paymentId): array
@@ -94,6 +99,20 @@ class MercadoPagoService
         }
 
         return $request;
+    }
+
+    private function payerPayload(Pedido $pedido): array
+    {
+        $payer = [
+            'name' => $pedido->user->name,
+            'email' => $pedido->user->email,
+        ];
+
+        if ($pedido->user->telefono) {
+            $payer['phone'] = ['number' => $pedido->user->telefono];
+        }
+
+        return $payer;
     }
 
     private function canAutoReturn(string $url): bool

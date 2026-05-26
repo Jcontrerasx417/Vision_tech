@@ -23,7 +23,7 @@ class FacturaController extends Controller
     {
         $factura->load('pedido.user', 'pedido.items.producto', 'pedido.pago', 'pedido.entrega.drone');
         abort_unless(
-            $factura->pedido->user_id === $request->user()->id || $request->user()->hasRole('administrador', 'personal_logistico'),
+            $factura->pedido->user_id === $request->user()->id || $request->user()->hasRole('administrador'),
             403
         );
 

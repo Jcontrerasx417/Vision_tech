@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ?? 'VisionTech' }}</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -83,14 +84,20 @@
         }
 
         .badge-status {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            max-width: 100%;
             background: var(--dc-black);
             color: var(--dc-yellow);
             border-radius: 999px;
             padding: .35rem .65rem;
-            font-size: .78rem;
+            font-size: .72rem;
+            line-height: 1.1;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: .04em;
+            letter-spacing: .03em;
+            white-space: nowrap;
         }
 
         .badge-paid {
@@ -386,6 +393,8 @@
                 @endif
                 @if(auth()->user()->hasRole('administrador', 'personal_logistico'))
                     <a class="nav-link" href="{{ route('admin.dashboard') }}">Admin</a>
+                @endif
+                @if(auth()->user()->hasRole('administrador'))
                     <a class="nav-link" href="{{ route('facturas.index') }}">Facturas</a>
                 @endif
                 @if(auth()->user()->hasRole('proveedor'))

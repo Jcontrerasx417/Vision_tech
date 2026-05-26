@@ -124,20 +124,106 @@
 
         const playButton = document.getElementById('play-flight');
         if (playButton && routeCoords.length > 1) {
+            const completionUrl = @json(route('pedidos.tracking.completar', $pedido));
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+
+            const setVisualStatus = (statusKey) => {
+                const statusOrder = ['pendiente', 'en_preparacion', 'pagado', 'enviado', 'proximo_a_llegar', 'entregado'];
+                const activeIndex = statusOrder.indexOf(statusKey);
+                if (activeIndex === -1) return;
+
+                document.querySelectorAll('[data-tracking-step]').forEach((step) => {
+                    const stepIndex = statusOrder.indexOf(step.dataset.trackingStep);
+                    const helper = step.querySelector('[data-tracking-helper]');
+                    step.classList.toggle('done', stepIndex < activeIndex);
+                    step.classList.toggle('active', stepIndex === activeIndex);
+                    if (helper) {
+                        helper.textContent = stepIndex <= activeIndex ? 'Completado o en progreso' : 'Pendiente';
+                    }
+                });
+
+                const statusLabel = document.querySelector('[data-live-order-status]');
+                if (statusLabel) {
+                    statusLabel.textContent = statusKey.replaceAll('_', ' ');
+                }
+
+                droneMarker.setPopupContent(
+                    'Drone {{ $pedido->entrega?->drone?->codigo ?? 'sin asignar' }}<br>' +
+                    `Estado: ${statusKey.replaceAll('_', ' ')}<br>` +
+                    'Simulacion GPS en vivo'
+                );
+            };
+
+            const persistDeliveryCompletion = async () => {
+                const response = await fetch(completionUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error('No fue posible sincronizar la entrega.');
+                }
+
+                const data = await response.json();
+                document.querySelectorAll('[data-live-order-status]').forEach((element) => {
+                    element.textContent = (data.pedido_estado ?? 'entregado').replaceAll('_', ' ');
+                });
+                document.querySelectorAll('[data-live-delivery-status]').forEach((element) => {
+                    element.textContent = (data.entrega_estado ?? 'finalizada').replaceAll('_', ' ');
+                });
+                document.querySelectorAll('[data-live-drone-battery]').forEach((element) => {
+                    element.textContent = data.drone_bateria ?? '-';
+                });
+                document.querySelectorAll('[data-live-drone-status]').forEach((element) => {
+                    element.textContent = (data.drone_estado ?? 'disponible').replaceAll('_', ' ');
+                });
+                document.querySelectorAll('[data-live-gps-count]').forEach((element) => {
+                    element.textContent = data.gps_count ?? 0;
+                });
+
+                const gpsList = document.querySelector('[data-gps-list]');
+                if (gpsList && Array.isArray(data.gps_points) && data.gps_points.length > 0) {
+                    gpsList.innerHTML = data.gps_points.map((point) => `
+                        <div class="d-flex justify-content-between border-bottom py-2">
+                            <span>${point.registrado_en ?? 'Ahora'} / Lat ${Number(point.latitud).toFixed(7)} / Lng ${Number(point.longitud).toFixed(7)}</span>
+                            <strong>${point.altitud_m ?? '-'} m</strong>
+                        </div>
+                    `).join('');
+                }
+            };
+
             playButton.addEventListener('click', function () {
                 let index = 0;
                 this.disabled = true;
                 this.textContent = 'Reproduciendo vuelo...';
                 droneMarker.setLatLng(routeCoords[0]);
+                setVisualStatus('enviado');
 
                 const timer = setInterval(() => {
                     index++;
                     if (index >= routeCoords.length) {
+                        setVisualStatus('entregado');
                         clearInterval(timer);
-                        this.disabled = false;
-                        this.textContent = 'Reproducir vuelo';
-                        droneMarker.openPopup();
+                        this.textContent = 'Sincronizando entrega...';
+                        persistDeliveryCompletion()
+                            .then(() => {
+                                this.textContent = 'Vuelo completado';
+                                droneMarker.openPopup();
+                            })
+                            .catch(() => {
+                                this.disabled = false;
+                                this.textContent = 'Reintentar sincronizacion';
+                            });
                         return;
+                    }
+
+                    if (index >= Math.max(1, routeCoords.length - 2)) {
+                        setVisualStatus('proximo_a_llegar');
+                    } else {
+                        setVisualStatus('enviado');
                     }
 
                     droneMarker.setLatLng(routeCoords[index]);
@@ -293,7 +379,7 @@
     <div>
         <span class="badge-status">Seguimiento GPS</span>
         <h1 class="display-6 fw-bold mt-2 mb-1">Pedido #{{ $pedido->id }}</h1>
-        <p class="text-muted mb-0">Estado del pedido: <strong>{{ str_replace('_', ' ', $pedido->estado) }}</strong></p>
+        <p class="text-muted mb-0">Estado del pedido: <strong data-live-order-status>{{ str_replace('_', ' ', $pedido->estado) }}</strong></p>
     </div>
     <a class="btn btn-outline-primary" href="{{ route('pedidos.show', $pedido) }}">Ver detalle</a>
 </div>
@@ -306,10 +392,11 @@
                 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
                     <div class="d-flex flex-wrap gap-3">
                         <span><strong>Drone:</strong> {{ $pedido->entrega?->drone?->codigo ?? 'Sin asignar' }}</span>
-                        <span><strong>Bateria:</strong> {{ $pedido->entrega?->drone?->bateria ?? '-' }}%</span>
-                        <span><strong>Entrega:</strong> {{ $pedido->entrega?->estado ?? 'sin entrega' }}</span>
+                        <span><strong>Bateria:</strong> <span data-live-drone-battery>{{ $pedido->entrega?->drone?->bateria ?? '-' }}</span>%</span>
+                        <span><strong>Dron:</strong> <span data-live-drone-status>{{ str_replace('_', ' ', $pedido->entrega?->drone?->estado ?? 'sin estado') }}</span></span>
+                        <span><strong>Entrega:</strong> <span data-live-delivery-status>{{ str_replace('_', ' ', $pedido->entrega?->estado ?? 'sin entrega') }}</span></span>
                         <span><strong>Tipo:</strong> {{ $pedido->tipo_entrega }}</span>
-                        <span><strong>Puntos GPS:</strong> {{ $points->count() }}</span>
+                        <span><strong>Puntos GPS:</strong> <span data-live-gps-count>{{ $points->count() }}</span></span>
                     </div>
                     <button id="play-flight" class="btn btn-primary btn-sm" type="button" @disabled($mapPoints->count() < 2)>
                         Reproducir vuelo
@@ -323,11 +410,11 @@
             <h2 class="h5">Linea de estado</h2>
             @foreach($steps as $key => $label)
                 @php $index = array_search($key, $keys, true); @endphp
-                <div class="tracking-step {{ $index < $currentIndex ? 'done' : '' }} {{ $index === $currentIndex ? 'active' : '' }}">
+                <div class="tracking-step {{ $index < $currentIndex ? 'done' : '' }} {{ $index === $currentIndex ? 'active' : '' }}" data-tracking-step="{{ $key }}">
                     <span class="tracking-dot">{{ $index + 1 }}</span>
                     <div>
                         <strong>{{ $label }}</strong>
-                        <div class="small text-muted">{{ $index <= $currentIndex ? 'Completado o en progreso' : 'Pendiente' }}</div>
+                        <div class="small text-muted" data-tracking-helper>{{ $index <= $currentIndex ? 'Completado o en progreso' : 'Pendiente' }}</div>
                     </div>
                 </div>
             @endforeach
@@ -339,14 +426,16 @@
     <div class="col-lg-8">
         <div class="surface p-3">
             <h2 class="h5">Puntos GPS registrados</h2>
-            @forelse($points as $point)
-                <div class="d-flex justify-content-between border-bottom py-2">
-                    <span>{{ $point->registrado_en }} / Lat {{ $point->latitud }} / Lng {{ $point->longitud }}</span>
-                    <strong>{{ $point->altitud_m ?? '-' }} m</strong>
-                </div>
-            @empty
-                <p class="text-muted mb-0">Aun no hay puntos GPS registrados. El mapa muestra una ruta de referencia.</p>
-            @endforelse
+            <div data-gps-list>
+                @forelse($points as $point)
+                    <div class="d-flex justify-content-between border-bottom py-2">
+                        <span>{{ $point->registrado_en }} / Lat {{ $point->latitud }} / Lng {{ $point->longitud }}</span>
+                        <strong>{{ $point->altitud_m ?? '-' }} m</strong>
+                    </div>
+                @empty
+                    <p class="text-muted mb-0">Aun no hay puntos GPS registrados. Al completar el vuelo se guardara la ruta simulada.</p>
+                @endforelse
+            </div>
         </div>
     </div>
     @if(auth()->user()?->hasRole('administrador', 'personal_logistico') && $pedido->entrega)

@@ -39,21 +39,26 @@
 
     .vt-bento {
         display: grid;
-        grid-template-columns: repeat(12, 1fr);
+        grid-template-columns: minmax(0, 1.45fr) minmax(320px, .7fr);
+        gap: 1.25rem;
+        align-items: stretch;
+    }
+
+    .vt-bento-side {
+        display: grid;
         gap: 1.25rem;
     }
 
-    .vt-bento-large {
-        grid-column: span 8;
-    }
-
-    .vt-bento-small {
-        grid-column: span 4;
+    .vt-bento-bottom {
+        display: grid;
+        grid-template-columns: minmax(260px, .85fr) minmax(0, 1.4fr);
+        gap: 1.25rem;
+        grid-column: 1 / -1;
     }
 
     .vt-feature {
-        min-height: 260px;
-        padding: 2rem;
+        min-height: 100%;
+        padding: clamp(1.25rem, 2.5vw, 2rem);
         overflow: hidden;
         position: relative;
     }
@@ -69,7 +74,7 @@
     }
 
     .vt-feature-img {
-        height: 170px;
+        height: 210px;
         border-radius: 8px;
         overflow: hidden;
         border: 1px solid var(--dc-line);
@@ -88,6 +93,43 @@
         transform: scale(1.02);
     }
 
+    .vt-tracking-panel {
+        display: grid;
+        grid-template-columns: minmax(0, .95fr) minmax(280px, 1.1fr);
+        gap: 1.5rem;
+        align-items: center;
+    }
+
+    .vt-route-card {
+        border: 1px solid var(--dc-line);
+        border-radius: 8px;
+        padding: 1rem;
+        background: #fff;
+    }
+
+    .vt-route-row {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: .75rem;
+        padding: .55rem 0;
+    }
+
+    .vt-route-dot {
+        width: .85rem;
+        height: .85rem;
+        border-radius: 999px;
+        background: var(--dc-yellow);
+        box-shadow: 0 0 0 5px rgba(255, 215, 0, .2);
+    }
+
+    .vt-payment-card {
+        border: 1px solid rgba(255, 255, 255, .7);
+        border-radius: 8px;
+        padding: 1rem;
+        background: rgba(255, 255, 255, .04);
+    }
+
     .vt-process-number {
         position: absolute;
         top: -2rem;
@@ -98,10 +140,11 @@
         line-height: 1;
     }
 
-    @media (max-width: 768px) {
-        .vt-bento-large,
-        .vt-bento-small {
-            grid-column: span 12;
+    @media (max-width: 992px) {
+        .vt-bento,
+        .vt-bento-bottom,
+        .vt-tracking-panel {
+            grid-template-columns: 1fr;
         }
     }
 </style>
@@ -154,46 +197,74 @@
     </div>
 
     <div class="vt-bento">
-        <div class="vt-card vt-feature vt-bento-large">
-            <span class="material-symbols-outlined text-yellow fs-1 mb-3">analytics</span>
-            <h3 class="h4 fw-bold">Tracking en vivo</h3>
-            <p class="text-muted col-lg-8">Seguimiento visual, estado de pedido y puntos GPS cuando el pago ya fue aprobado y existe una entrega asignada.</p>
-            <div class="row g-3 mt-3">
-                <div class="col-md-7">
-                    <div class="vt-feature-img">
-                        <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&w=900&q=85" alt="Mapa de entrega">
+        <div class="vt-card vt-feature">
+            <div class="vt-tracking-panel">
+                <div>
+                    <span class="material-symbols-outlined text-yellow fs-1 mb-3">analytics</span>
+                    <h3 class="h4 fw-bold">Tracking en vivo</h3>
+                    <p class="text-muted">Mapa real, destino del cliente y puntos GPS del dron cuando el pago ya fue aprobado y existe una entrega asignada.</p>
+
+                    <div class="vt-route-card mt-4">
+                        <div class="vt-kicker mb-2">Ruta activa</div>
+                        <div class="vt-route-row">
+                            <span class="vt-route-dot"></span>
+                            <div>
+                                <strong>Centro logistico</strong>
+                                <div class="small text-muted">Dron listo para despegar</div>
+                            </div>
+                            <span class="badge-status">Origen</span>
+                        </div>
+                        <div class="vt-route-row border-top">
+                            <span class="vt-route-dot"></span>
+                            <div>
+                                <strong>Direccion del pedido</strong>
+                                <div class="small text-muted">Marcador ajustable en el mapa</div>
+                            </div>
+                            <span class="badge-status badge-status-approved">Destino</span>
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-5">
-                    <div class="vt-map-preview h-100"></div>
+
+                <div class="vt-feature-img">
+                    <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&w=1000&q=85" alt="Mapa de entrega">
                 </div>
             </div>
         </div>
 
-        <div class="vt-card vt-feature vt-feature-dark vt-bento-small">
-            <span class="material-symbols-outlined text-yellow fs-1 mb-3">payments</span>
-            <h3 class="h4 fw-bold">Pagos primero</h3>
-            <p class="text-white-50">La regla esta blindada: sin pago aprobado no hay dron, envio ni tracking.</p>
-            <div class="border rounded p-3 mt-4">
-                <div class="small text-white-50">TRANSACCION</div>
-                <div class="font-monospace">**** **** **** 8829</div>
+        <div class="vt-bento-side">
+            <div class="vt-card vt-feature vt-feature-dark">
+                <span class="material-symbols-outlined text-yellow fs-1 mb-3">payments</span>
+                <h3 class="h4 fw-bold">Pagos primero</h3>
+                <p class="text-white-50">Sin pago aprobado no hay dron, envio ni tracking.</p>
+                <div class="vt-payment-card mt-4">
+                    <div class="small text-white-50">TRANSACCION SEGURA</div>
+                    <div class="font-monospace">**** **** **** 8829</div>
+                </div>
+            </div>
+
+            <div class="vt-card vt-feature vt-feature-yellow">
+                <span class="material-symbols-outlined fs-1 mb-3">package</span>
+                <h3 class="h4 fw-bold">Carga optimizada</h3>
+                <p class="mb-0">El peso del pedido define si un dron disponible puede tomar la entrega.</p>
             </div>
         </div>
 
-        <div class="vt-card vt-feature vt-feature-yellow vt-bento-small">
-            <span class="material-symbols-outlined fs-1 mb-3">package</span>
-            <h3 class="h4 fw-bold">Carga optimizada</h3>
-            <p class="mb-0">El peso del pedido define si un dron disponible puede tomar la entrega.</p>
-        </div>
-
-        <div class="vt-card vt-feature vt-bento-large d-md-flex align-items-center gap-4">
-            <div class="flex-grow-1">
-                <span class="material-symbols-outlined text-yellow fs-1 mb-3">precision_manufacturing</span>
-                <h3 class="h4 fw-bold">Flota autonoma</h3>
-                <p class="text-muted mb-md-0">Panel logistico para supervisar pedidos, pagos, drones disponibles y entregas activas.</p>
+        <div class="vt-bento-bottom">
+            <div class="vt-card vt-feature">
+                <span class="material-symbols-outlined text-yellow fs-1 mb-3">fact_check</span>
+                <h3 class="h4 fw-bold">Control de productos</h3>
+                <p class="text-muted mb-0">Cada producto de proveedor pasa por revision antes de aparecer en el catalogo.</p>
             </div>
-            <div class="vt-feature-img flex-shrink-0" style="width: min(100%, 360px);">
-                <img src="https://images.unsplash.com/photo-1473968512647-3e447244af8f?auto=format&fit=crop&w=900&q=85" alt="Dron industrial">
+
+            <div class="vt-card vt-feature d-md-flex align-items-center gap-4">
+                <div class="flex-grow-1">
+                    <span class="material-symbols-outlined text-yellow fs-1 mb-3">precision_manufacturing</span>
+                    <h3 class="h4 fw-bold">Flota autonoma</h3>
+                    <p class="text-muted mb-md-0">Panel logistico para supervisar pedidos, pagos, drones disponibles y entregas activas.</p>
+                </div>
+                <div class="vt-feature-img flex-shrink-0" style="width: min(100%, 380px);">
+                    <img src="https://images.unsplash.com/photo-1473968512647-3e447244af8f?auto=format&fit=crop&w=900&q=85" alt="Dron industrial">
+                </div>
             </div>
         </div>
     </div>

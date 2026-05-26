@@ -43,12 +43,13 @@ class ProductoController extends Controller
             $data['imagen_url'] = $imagenes[0];
         }
         $producto = $proveedor->productos()->create($data + [
-            'activo' => true,
-            'estado' => 'aprobado',
+            'activo' => false,
+            'estado' => 'pendiente_revision',
+            'motivo_rechazo' => null,
         ]);
         $this->syncImages($producto, $imagenes ?: array_filter([$producto->imagen_url]));
 
-        return redirect()->route('proveedor.productos.index')->with('status', 'Producto publicado en el catalogo.');
+        return redirect()->route('proveedor.productos.index')->with('status', 'Producto enviado a revision del administrador.');
     }
 
     public function edit(Request $request, Producto $producto): View
@@ -74,8 +75,8 @@ class ProductoController extends Controller
             $data['imagen_url'] = $imagenes[0];
         }
         $producto->update($data + [
-            'activo' => true,
-            'estado' => 'aprobado',
+            'activo' => false,
+            'estado' => 'pendiente_revision',
             'motivo_rechazo' => null,
         ]);
         if ($imagenes) {
@@ -85,7 +86,7 @@ class ProductoController extends Controller
             $this->syncImages($producto, [$data['imagen_url']]);
         }
 
-        return redirect()->route('proveedor.productos.index')->with('status', 'Producto actualizado.');
+        return redirect()->route('proveedor.productos.index')->with('status', 'Producto actualizado y enviado nuevamente a revision.');
     }
 
     public function destroy(Request $request, Producto $producto): RedirectResponse
@@ -111,7 +112,11 @@ class ProductoController extends Controller
         $proveedor = $this->proveedor($request);
         abort_unless($producto->proveedor_id === $proveedor->id, 403);
         abort_unless($proveedor->activo, 403, 'Tu perfil de proveedor debe estar aprobado para activar productos.');
-        $producto->update(['estado' => 'aprobado', 'activo' => true, 'motivo_rechazo' => null]);
+        if ($producto->estado !== 'aprobado') {
+            return back()->withErrors('Este producto no esta aprobado. Debes editarlo y enviarlo nuevamente a revision.');
+        }
+
+        $producto->update(['activo' => true, 'motivo_rechazo' => null]);
 
         return back()->with('status', 'Producto activado y visible en el catalogo.');
     }

@@ -7,6 +7,7 @@ use App\Http\Requests\ProductoRequest;
 use App\Models\Producto;
 use App\Models\Proveedor;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class ProductoController extends Controller
@@ -42,5 +43,32 @@ class ProductoController extends Controller
     {
         $producto->delete();
         return back()->with('status', 'Producto eliminado.');
+    }
+
+    public function aprobar(Producto $producto): RedirectResponse
+    {
+        $producto->update([
+            'estado' => 'aprobado',
+            'activo' => true,
+            'motivo_rechazo' => null,
+            'reportado' => false,
+        ]);
+
+        return back()->with('status', 'Producto aprobado y publicado en el catalogo.');
+    }
+
+    public function rechazar(Request $request, Producto $producto): RedirectResponse
+    {
+        $data = $request->validate([
+            'motivo_rechazo' => ['required', 'string', 'max:1000'],
+        ]);
+
+        $producto->update([
+            'estado' => 'rechazado',
+            'activo' => false,
+            'motivo_rechazo' => $data['motivo_rechazo'],
+        ]);
+
+        return back()->with('status', 'Producto rechazado y oculto del catalogo.');
     }
 }

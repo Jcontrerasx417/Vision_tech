@@ -39,13 +39,21 @@
                                 <td>${{ number_format($producto->precio, 0, ',', '.') }}</td>
                                 <td>{{ $producto->peso_kg }} kg</td>
                                 <td>{{ $producto->stock }}</td>
-                                <td><span class="badge-status">{{ str_replace('_', ' ', $producto->estado) }}</span></td>
+                                <td>
+                                    <span class="badge-status {{ $producto->estadoBadgeClass() }}">{{ $producto->estadoLabel() }}</span>
+                                    @if($producto->estado === 'pendiente_revision')
+                                        <div class="small text-muted">Esperando aprobacion del administrador.</div>
+                                    @endif
+                                    @if($producto->estado === 'rechazado' && $producto->motivo_rechazo)
+                                        <div class="small text-danger">Motivo: {{ Str::limit($producto->motivo_rechazo, 80) }}</div>
+                                    @endif
+                                </td>
                                 <td class="text-end">
                                     <div class="d-flex justify-content-end gap-2">
                                         <a class="btn btn-outline-secondary btn-sm" href="{{ route('proveedor.productos.edit', $producto) }}">Editar</a>
                                         @if($producto->activo)
                                             <form method="POST" action="{{ route('proveedor.productos.desactivar', $producto) }}">@csrf @method('PATCH')<button class="btn btn-outline-primary btn-sm">Desactivar</button></form>
-                                        @else
+                                        @elseif($producto->estado === 'aprobado')
                                             <form method="POST" action="{{ route('proveedor.productos.activar', $producto) }}">@csrf @method('PATCH')<button class="btn btn-primary btn-sm">Activar</button></form>
                                         @endif
                                         <form method="POST" action="{{ route('proveedor.productos.destroy', $producto) }}">@csrf @method('DELETE')<button class="btn btn-outline-danger btn-sm">Eliminar</button></form>

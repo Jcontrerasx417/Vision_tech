@@ -47,6 +47,28 @@ class Producto extends Model
         return $this->activo && in_array($this->estado, ['aprobado', 'activo'], true);
     }
 
+    public function estadoLabel(): string
+    {
+        return match ($this->estado) {
+            'pendiente_revision' => 'Pendiente revision',
+            'aprobado', 'activo' => 'Aprobado',
+            'rechazado' => 'Rechazado',
+            'inactivo' => 'Inactivo',
+            default => ucfirst(str_replace('_', ' ', (string) $this->estado)),
+        };
+    }
+
+    public function estadoBadgeClass(): string
+    {
+        return match ($this->estado) {
+            'pendiente_revision' => 'badge-pending',
+            'aprobado', 'activo' => 'badge-paid',
+            'rechazado' => 'bg-danger text-white',
+            'inactivo' => 'badge-muted-soft',
+            default => '',
+        };
+    }
+
     public function imagenPrincipalUrl(): string
     {
         return $this->imagen_url

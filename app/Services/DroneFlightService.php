@@ -50,6 +50,10 @@ class DroneFlightService
         $entrega->loadMissing('pedido.estacionEntrega', 'pedido.direccionCliente', 'drone.estacionEntrega');
         $pedido = $entrega->pedido;
 
+        if ($entrega->estado === 'finalizada' || $pedido->estado === 'entregado') {
+            return;
+        }
+
         if (! $pedido->estaPagado()) {
             throw new \RuntimeException('No se puede finalizar una entrega sin pago aprobado.');
         }
@@ -61,6 +65,7 @@ class DroneFlightService
         DB::transaction(function () use ($entrega, $pedido) {
             $destination = $this->destinationPoint($pedido);
             $base = $this->originPoint($entrega);
+            $this->ensureFlightPoints($entrega, $pedido, $base, $destination);
             $returnDistance = $this->distanceKm($destination['lat'], $destination['lng'], $base['lat'], $base['lng']);
             $this->consumeBattery($entrega, $this->batteryCost($returnDistance, 0, true));
 
@@ -82,6 +87,25 @@ class DroneFlightService
                 'estado' => $drone->bateria <= 20 ? 'mantenimiento' : 'disponible',
             ]);
         });
+    }
+
+    private function ensureFlightPoints(Entrega $entrega, Pedido $pedido, array $origin, array $destination): void
+    {
+        if ($entrega->trackingPoints()->exists()) {
+            return;
+        }
+
+        foreach ($this->routePoints($origin, $destination, 7) as $index => $point) {
+            $entrega->trackingPoints()->create([
+                'latitud' => $point['lat'],
+                'longitud' => $point['lng'],
+                'altitud_m' => $point['alt'],
+                'registrado_en' => now()->addSeconds($index * 45),
+            ]);
+        }
+
+        $entrega->update(['estado' => 'en_camino']);
+        $pedido->update(['estado' => 'enviado']);
     }
 
     private function routePoints(array $origin, array $destination, int $count): array

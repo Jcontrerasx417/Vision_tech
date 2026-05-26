@@ -5,16 +5,21 @@ namespace App\Http\Controllers;
 use App\Models\EstacionEntrega;
 use App\Models\Notificacion;
 use App\Models\Pedido;
+use App\Services\DroneFlightService;
 use App\Services\PedidoPagoService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class PedidoController extends Controller
 {
-    public function __construct(private readonly PedidoPagoService $pagoService)
+    public function __construct(
+        private readonly PedidoPagoService $pagoService,
+        private readonly DroneFlightService $flightService
+    )
     {
     }
 
@@ -142,6 +147,38 @@ class PedidoController extends Controller
         abort_unless($pedido->estaPagado() && $pedido->entrega()->exists(), 403, 'El tracking estara disponible cuando el pago sea aprobado y el drone sea asignado.');
 
         return view('tracking.show', ['pedido' => $pedido->load('estacionEntrega', 'direccionCliente', 'entrega.drone', 'entrega.trackingPoints')]);
+    }
+
+    public function completarTracking(Request $request, Pedido $pedido): JsonResponse
+    {
+        abort_unless($pedido->user_id === $request->user()->id || $request->user()->hasRole('administrador', 'personal_logistico'), 403);
+        abort_unless($pedido->estaPagado() && $pedido->entrega()->exists(), 403, 'El tracking estara disponible cuando el pago sea aprobado y el drone sea asignado.');
+
+        try {
+            $this->flightService->finalizarYRetornar($pedido->entrega);
+        } catch (\Throwable $exception) {
+            Log::error('Error completando tracking', ['pedido_id' => $pedido->id, 'error' => $exception->getMessage()]);
+
+            return response()->json(['message' => $exception->getMessage()], 422);
+        }
+
+        $pedido->refresh()->load('entrega.drone', 'entrega.trackingPoints');
+
+        return response()->json([
+            'pedido_estado' => $pedido->estado,
+            'entrega_estado' => $pedido->entrega?->estado,
+            'drone_estado' => $pedido->entrega?->drone?->estado,
+            'drone_bateria' => $pedido->entrega?->drone?->bateria,
+            'gps_count' => $pedido->entrega?->trackingPoints->count() ?? 0,
+            'gps_points' => $pedido->entrega?->trackingPoints
+                ->map(fn ($point) => [
+                    'latitud' => (float) $point->latitud,
+                    'longitud' => (float) $point->longitud,
+                    'altitud_m' => $point->altitud_m,
+                    'registrado_en' => optional($point->registrado_en)->format('Y-m-d H:i:s'),
+                ])
+                ->values() ?? [],
+        ]);
     }
 
     private function notificar(Pedido $pedido, string $titulo, string $mensaje): void

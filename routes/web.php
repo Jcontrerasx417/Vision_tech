@@ -57,6 +57,10 @@ Route::middleware(['auth', 'role:cliente'])->group(function () {
 Route::middleware(['auth', 'role:cliente,administrador,personal_logistico'])->group(function () {
     Route::get('/pedidos/{pedido}', [PedidoController::class, 'show'])->name('pedidos.show');
     Route::get('/pedidos/{pedido}/tracking', [PedidoController::class, 'tracking'])->name('pedidos.tracking');
+    Route::post('/pedidos/{pedido}/tracking/completar', [PedidoController::class, 'completarTracking'])->name('pedidos.tracking.completar');
+});
+
+Route::middleware(['auth', 'role:cliente,administrador'])->group(function () {
     Route::get('/facturas', [FacturaController::class, 'index'])->name('facturas.index');
     Route::get('/facturas/{factura}', [FacturaController::class, 'show'])->name('facturas.show');
 });
@@ -77,6 +81,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:administrador,
 
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:administrador'])->group(function () {
     Route::resource('productos', ProductoController::class)->except(['show']);
+    Route::patch('/productos/{producto}/aprobar', [ProductoController::class, 'aprobar'])->name('productos.aprobar');
+    Route::patch('/productos/{producto}/rechazar', [ProductoController::class, 'rechazar'])->name('productos.rechazar');
     Route::resource('proveedores', ProveedorController::class)->parameters(['proveedores' => 'proveedor'])->except(['show']);
     Route::get('/solicitudes-proveedores', [SolicitudProveedorController::class, 'index'])->name('solicitudes.index');
     Route::patch('/solicitudes-proveedores/{solicitud}/aprobar', [SolicitudProveedorController::class, 'aprobar'])->name('solicitudes.aprobar');

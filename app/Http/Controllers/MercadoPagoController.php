@@ -27,7 +27,7 @@ class MercadoPagoController extends Controller
 
         try {
             $preference = $this->mercadoPago->crearPreferencia($pedido->load('user'));
-            $checkoutUrl = $preference['init_point'] ?? $preference['sandbox_init_point'] ?? null;
+            $checkoutUrl = $this->mercadoPago->checkoutUrl($preference);
 
             if (! $checkoutUrl) {
                 throw new \RuntimeException('Mercado Pago no devolvio una URL de checkout.');
@@ -48,7 +48,10 @@ class MercadoPagoController extends Controller
 
             return redirect()->away($checkoutUrl);
         } catch (\Throwable $exception) {
-            Log::error('Error iniciando Mercado Pago', ['pedido_id' => $pedido->id, 'error' => $exception->getMessage()]);
+            Log::error('Error iniciando Mercado Pago', [
+                'pedido_id' => $pedido->id,
+                'error' => $exception->getMessage(),
+            ]);
 
             return back()->withErrors('No fue posible iniciar Mercado Pago. Revisa las credenciales o intenta de nuevo.');
         }

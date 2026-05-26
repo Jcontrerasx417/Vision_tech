@@ -102,4 +102,66 @@ class PedidoPagoDespachoTest extends TestCase
         $this->assertEqualsWithDelta(7.1189000, (float) $pedido->destino_latitud, 0.0000001);
         $this->assertEqualsWithDelta(-73.1221000, (float) $pedido->destino_longitud, 0.0000001);
     }
+
+    public function test_al_completar_tracking_el_drone_queda_disponible(): void
+    {
+        $cliente = User::factory()->create(['role' => 'cliente']);
+        $proveedor = Proveedor::create(['nombre' => 'Proveedor prueba']);
+        $estacion = EstacionEntrega::create([
+            'nombre' => 'Estacion centro',
+            'direccion' => 'Calle 1',
+            'latitud' => 7.1253930,
+            'longitud' => -73.1198040,
+            'activa' => true,
+        ]);
+        $drone = Drone::create([
+            'codigo' => 'DRN-RETURN',
+            'modelo' => 'Ligero',
+            'capacidad_kg' => 5,
+            'bateria' => 100,
+            'estado' => 'disponible',
+            'estacion_entrega_id' => $estacion->id,
+        ]);
+        $producto = Producto::create([
+            'proveedor_id' => $proveedor->id,
+            'nombre' => 'Producto prueba',
+            'precio' => 25000,
+            'peso_kg' => 1,
+            'stock' => 4,
+            'activo' => true,
+        ]);
+
+        $carrito = Carrito::create(['user_id' => $cliente->id]);
+        $carrito->items()->create(['producto_id' => $producto->id, 'cantidad' => 1]);
+
+        $this->actingAs($cliente)
+            ->post(route('pedidos.store'), [
+                'tipo_entrega' => 'estacion',
+                'estacion_entrega_id' => $estacion->id,
+            ])
+            ->assertRedirect();
+
+        $pedido = $cliente->pedidos()->firstOrFail();
+
+        $this->actingAs($cliente)
+            ->post(route('pedidos.pagar', $pedido))
+            ->assertSessionHas('status');
+
+        $this->assertSame('en_vuelo', $drone->fresh()->estado);
+
+        $this->actingAs($cliente)
+            ->postJson(route('pedidos.tracking.completar', $pedido))
+            ->assertOk()
+            ->assertJson([
+                'pedido_estado' => 'entregado',
+                'entrega_estado' => 'finalizada',
+                'drone_estado' => 'disponible',
+            ])
+            ->assertJsonPath('gps_count', 8);
+
+        $this->assertSame('entregado', $pedido->fresh()->estado);
+        $this->assertSame('finalizada', $pedido->entrega()->firstOrFail()->estado);
+        $this->assertSame('disponible', $drone->fresh()->estado);
+        $this->assertCount(8, $pedido->entrega()->firstOrFail()->trackingPoints);
+    }
 }

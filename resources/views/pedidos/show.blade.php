@@ -131,6 +131,26 @@
                     </div>
                 </div>
             </section>
+
+            @if(config('services.mercado_pago.sandbox', true))
+                <section class="vt-card p-4 mb-4">
+                    <h2 class="h5 fw-bold mb-3">Prueba de Mercado Pago</h2>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="vt-kicker">1. Comprador</div>
+                            <p class="text-muted mb-0">En Mercado Pago inicia sesion con la cuenta compradora de prueba, no con tu cuenta real.</p>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="vt-kicker">2. Tarjeta</div>
+                            <p class="text-muted mb-0">Usa una tarjeta de prueba y coloca <strong>APRO</strong> como nombre del titular para aprobar.</p>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="vt-kicker">3. Resultado</div>
+                            <p class="text-muted mb-0">Al volver al sistema, el pedido queda pagado y se desbloquea el dron.</p>
+                        </div>
+                    </div>
+                </section>
+            @endif
         @endif
 
         <section class="vt-card overflow-hidden">
@@ -224,8 +244,10 @@
             <div class="d-flex justify-content-between border-bottom py-2"><span>Estado pedido</span><strong>{{ str_replace('_', ' ', $pedido->estado) }}</strong></div>
             <div class="d-flex justify-content-between border-bottom py-2"><span>Pago</span><strong>{{ $pagoEstado }}</strong></div>
             <div class="d-flex justify-content-between border-bottom py-2"><span>Entrega</span><strong>{{ $pedido->entrega?->estado ?? 'Sin entrega' }}</strong></div>
-            <div class="d-flex justify-content-between py-2"><span>Factura</span><strong>{{ $pedido->factura?->numero ?? 'No generada' }}</strong></div>
-            @if($pedido->factura)
+            @if(auth()->user()?->hasRole('cliente', 'administrador'))
+                <div class="d-flex justify-content-between py-2"><span>Factura</span><strong>{{ $pedido->factura?->numero ?? 'No generada' }}</strong></div>
+            @endif
+            @if($pedido->factura && auth()->user()?->hasRole('cliente', 'administrador'))
                 <a class="btn btn-outline-primary w-100 mt-2" href="{{ route('facturas.show', $pedido->factura) }}">Ver factura</a>
             @endif
         </section>
